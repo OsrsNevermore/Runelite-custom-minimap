@@ -6,8 +6,8 @@ import net.runelite.api.Client;
 import net.runelite.api.events.ScriptPostFired;
 import net.runelite.api.events.WidgetLoaded;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetID;
-import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.api.widgets.ComponentID;
+import net.runelite.api.widgets.InterfaceID;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -41,6 +41,7 @@ public class OrbHiderminiPlugin extends Plugin
     private static final int NOMAP_ORB_WORLDMAP   = 51;
 
     // --- Normal minimap group ---
+    // This matches InterfaceID.MINIMAP
     private static final int MINIMAP_GROUP_ID   = 164;
 
     // Logout (X) button pieces
@@ -51,9 +52,9 @@ public class OrbHiderminiPlugin extends Plugin
     private static final int[] MINIMAP_HUD_CLICK = {23, 24, 25, 26, 27, 28, 31};
 
     // Individual UI bits you asked to control:
-    private static final int MINIMAP_COMPASS_ID   = 29; // Compass graphic
-    private static final int MINIMAP_MINIMAP_ID   = 30; // Minimap disc/background
-    private static final int MINIMAP_HUD_BORDER_ID= 32; // HUD border ring
+    private static final int MINIMAP_COMPASS_ID    = 29; // Compass graphic
+    private static final int MINIMAP_MINIMAP_ID    = 30; // Minimap disc/background
+    private static final int MINIMAP_HUD_BORDER_ID = 32; // HUD border ring
 
     // ---------------- Baseline storage for "0 = original" (minimal feature addition) ----------------
     // Key format "groupId:childId" -> original (x,y)
@@ -84,9 +85,9 @@ public class OrbHiderminiPlugin extends Plugin
     }
 
     // Apply offsets to both the normal and the nomap version of a given orb
-    private void applyOffsets(WidgetInfo normalInfo, int nomapChildId, int dx, int dy)
+    private void applyOffsets(int normalComponentId, int nomapChildId, int dx, int dy)
     {
-        Widget normal = client.getWidget(normalInfo);
+        Widget normal = client.getWidget(normalComponentId);
         if (normal != null)
         {
             int normalChildId = normal.getId() & 0xFFFF;
@@ -125,7 +126,7 @@ public class OrbHiderminiPlugin extends Plugin
     public void onWidgetLoaded(WidgetLoaded event)
     {
         int groupId = event.getGroupId();
-        if (groupId == WidgetID.MINIMAP_GROUP_ID || groupId == NOMAP_GROUP_ID)
+        if (groupId == InterfaceID.MINIMAP || groupId == NOMAP_GROUP_ID)
         {
             clientThread.invoke(this::updateAllOrbs);    // run on client thread
         }
@@ -157,9 +158,9 @@ public class OrbHiderminiPlugin extends Plugin
         if (w != null) w.setHidden(hidden);
     }
 
-    private void setOrbHidden(WidgetInfo normalInfo, int nomapChildId, boolean hidden)
+    private void setOrbHidden(int normalComponentId, int nomapChildId, boolean hidden)
     {
-        setHidden(client.getWidget(normalInfo), hidden);                   // Normal minimap
+        setHidden(client.getWidget(normalComponentId), hidden);            // Normal minimap
         setHidden(client.getWidget(NOMAP_GROUP_ID, nomapChildId), hidden); // Nomap minimap
     }
 
@@ -203,12 +204,12 @@ public class OrbHiderminiPlugin extends Plugin
 
     public void updateAllOrbs()
     {
-        setOrbHidden(WidgetInfo.MINIMAP_XP_ORB,        NOMAP_XP_DROPS,       config.hideXpOrb());
-        setOrbHidden(WidgetInfo.MINIMAP_HEALTH_ORB,    NOMAP_ORB_HEALTH,     config.hideHealthOrb());
-        setOrbHidden(WidgetInfo.MINIMAP_PRAYER_ORB,    NOMAP_ORB_PRAYER,     config.hidePrayerOrb());
-        setOrbHidden(WidgetInfo.MINIMAP_RUN_ORB,       NOMAP_ORB_RUNENERGY,  config.hideRunOrb());
-        setOrbHidden(WidgetInfo.MINIMAP_SPEC_ORB,      NOMAP_ORB_SPECENERGY, config.hideSpecOrb());
-        setOrbHidden(WidgetInfo.MINIMAP_WORLDMAP_ORB,  NOMAP_ORB_WORLDMAP,   config.hideWorldMapOrb());
+        setOrbHidden(ComponentID.MINIMAP_XP_ORB,        NOMAP_XP_DROPS,       config.hideXpOrb());
+        setOrbHidden(ComponentID.MINIMAP_HEALTH_ORB,    NOMAP_ORB_HEALTH,     config.hideHealthOrb());
+        setOrbHidden(ComponentID.MINIMAP_PRAYER_ORB,    NOMAP_ORB_PRAYER,     config.hidePrayerOrb());
+        setOrbHidden(ComponentID.MINIMAP_RUN_ORB,       NOMAP_ORB_RUNENERGY,  config.hideRunOrb());
+        setOrbHidden(ComponentID.MINIMAP_SPEC_ORB,      NOMAP_ORB_SPECENERGY, config.hideSpecOrb());
+        setOrbHidden(ComponentID.MINIMAP_WORLDMAP_ORB,  NOMAP_ORB_WORLDMAP,   config.hideWorldMapOrb());
 
         // Independent toggles
         hideLogoutX(config.hideLogoutButton());
@@ -220,21 +221,21 @@ public class OrbHiderminiPlugin extends Plugin
         hideHudBorderUI(config.hideHudBorder()); // child 32
 
         // --- Minimal feature addition: apply X/Y offsets for HP/Prayer/Run/Spec (0 = original) ---
-        applyOffsets(WidgetInfo.MINIMAP_HEALTH_ORB,    NOMAP_ORB_HEALTH,     config.healthOffsetX(),   config.healthOffsetY());
-        applyOffsets(WidgetInfo.MINIMAP_PRAYER_ORB,    NOMAP_ORB_PRAYER,     config.prayerOffsetX(),   config.prayerOffsetY());
-        applyOffsets(WidgetInfo.MINIMAP_RUN_ORB,       NOMAP_ORB_RUNENERGY,  config.runOffsetX(),      config.runOffsetY());
-        applyOffsets(WidgetInfo.MINIMAP_SPEC_ORB,      NOMAP_ORB_SPECENERGY, config.specOffsetX(),     config.specOffsetY());
+        applyOffsets(ComponentID.MINIMAP_HEALTH_ORB,    NOMAP_ORB_HEALTH,     config.healthOffsetX(),   config.healthOffsetY());
+        applyOffsets(ComponentID.MINIMAP_PRAYER_ORB,    NOMAP_ORB_PRAYER,     config.prayerOffsetX(),   config.prayerOffsetY());
+        applyOffsets(ComponentID.MINIMAP_RUN_ORB,       NOMAP_ORB_RUNENERGY,  config.runOffsetX(),      config.runOffsetY());
+        applyOffsets(ComponentID.MINIMAP_SPEC_ORB,      NOMAP_ORB_SPECENERGY, config.specOffsetX(),     config.specOffsetY());
         // ------------------------------------------------------------------------------------------
     }
 
     public void showAllOrbs()
     {
-        setOrbHidden(WidgetInfo.MINIMAP_XP_ORB,        NOMAP_XP_DROPS,       false);
-        setOrbHidden(WidgetInfo.MINIMAP_HEALTH_ORB,    NOMAP_ORB_HEALTH,     false);
-        setOrbHidden(WidgetInfo.MINIMAP_PRAYER_ORB,    NOMAP_ORB_PRAYER,     false);
-        setOrbHidden(WidgetInfo.MINIMAP_RUN_ORB,       NOMAP_ORB_RUNENERGY,  false);
-        setOrbHidden(WidgetInfo.MINIMAP_SPEC_ORB,      NOMAP_ORB_SPECENERGY, false);
-        setOrbHidden(WidgetInfo.MINIMAP_WORLDMAP_ORB,  NOMAP_ORB_WORLDMAP,   false);
+        setOrbHidden(ComponentID.MINIMAP_XP_ORB,        NOMAP_XP_DROPS,       false);
+        setOrbHidden(ComponentID.MINIMAP_HEALTH_ORB,    NOMAP_ORB_HEALTH,     false);
+        setOrbHidden(ComponentID.MINIMAP_PRAYER_ORB,    NOMAP_ORB_PRAYER,     false);
+        setOrbHidden(ComponentID.MINIMAP_RUN_ORB,       NOMAP_ORB_RUNENERGY,  false);
+        setOrbHidden(ComponentID.MINIMAP_SPEC_ORB,      NOMAP_ORB_SPECENERGY, false);
+        setOrbHidden(ComponentID.MINIMAP_WORLDMAP_ORB,  NOMAP_ORB_WORLDMAP,   false);
 
         hideLogoutX(false);
         setMinimapClickThrough(false);
